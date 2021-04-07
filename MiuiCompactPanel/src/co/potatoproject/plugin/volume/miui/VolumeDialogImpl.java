@@ -185,6 +185,7 @@ public class VolumeDialogImpl implements VolumeDialog {
     private boolean mShowActiveStreamOnly;
     private boolean mConfigChanged = false;
     private boolean mHasSeenODICaptionsTooltip;
+    private boolean mEnableVolumePanelTint;
     private ViewStub mODICaptionsTooltipViewStub;
     private View mODICaptionsTooltipView = null;
 
@@ -995,6 +996,7 @@ public class VolumeDialogImpl implements VolumeDialog {
             ColorStateList ringerbackgroundnormal = mContext.getResources().getColorStateList(R.color.ringer_bcg_normal);
             int RingerMuteT = mContext.getResources().getColor(R.color.ringer_icon_mute);
             int RingerNormalT = mContext.getResources().getColor(R.color.ringer_icon_normal);
+            mEnableVolumePanelTint = mSysUIContext.getResources().getBoolean(mSysUIR.bool("config_enableVolumePanelTint"));
 
 
             boolean isZenMuted = mState.zenMode == Global.ZEN_MODE_ALARMS
@@ -1010,7 +1012,8 @@ public class VolumeDialogImpl implements VolumeDialog {
                     addAccessibilityDescription(mRingerIcon, RINGER_MODE_VIBRATE,
                             mSysUIContext.getString(mSysUIR.string("volume_ringer_hint_mute")));
                     mRingerIcon.setTag(Events.ICON_STATE_VIBRATE);
-                    mRinger.setBackgroundTintList(null);
+                    mRinger.setBackgroundTintList(mEnableVolumePanelTint ?
+                            Utils.getColorAccent(mContext) : null);
                     mRingerIcon.setColorFilter(RingerMuteT);
                     break;
                 case AudioManager.RINGER_MODE_SILENT:
@@ -1019,7 +1022,8 @@ public class VolumeDialogImpl implements VolumeDialog {
                     mRingerIcon.setTag(Events.ICON_STATE_MUTE);
                     addAccessibilityDescription(mRingerIcon, RINGER_MODE_SILENT,
                             mSysUIContext.getString(mSysUIR.string("volume_ringer_hint_unmute")));
-                    mRinger.setBackgroundTintList(null);
+                    mRinger.setBackgroundTintList(mEnableVolumePanelTint ?
+                            Utils.getColorAccent(mContext) : null);
                     mRingerIcon.setColorFilter(RingerMuteT);
                     break;
                 case AudioManager.RINGER_MODE_NORMAL:
@@ -1031,7 +1035,8 @@ public class VolumeDialogImpl implements VolumeDialog {
                         addAccessibilityDescription(mRingerIcon, RINGER_MODE_NORMAL,
                                 mSysUIContext.getString(mSysUIR.string("volume_ringer_hint_unmute")));
                         mRingerIcon.setTag(Events.ICON_STATE_MUTE);
-                        mRinger.setBackgroundTintList(null);
+                        mRinger.setBackgroundTintList(mEnableVolumePanelTint ?
+                                Utils.getColorAccent(mContext) : null);
                         mRingerIcon.setColorFilter(RingerMuteT);
                     } else {
                         ringerDrawable = mSysUIContext.getDrawable(
@@ -1280,6 +1285,16 @@ public class VolumeDialogImpl implements VolumeDialog {
         if (isActive) {
             row.slider.requestFocus();
         }
+        boolean useActiveColoring = true;
+        final ColorStateList tint = useActiveColoring
+                ? Utils.getColorAccent(mSysUIContext)
+                : Utils.getColorAttr(mSysUIContext, android.R.attr.colorForeground);
+        final int alpha = useActiveColoring
+                ? Color.alpha(tint.getDefaultColor())
+                : getAlphaAttr(android.R.attr.secondaryContentAlpha);
+        mEnableVolumePanelTint = mSysUIContext.getResources().getBoolean(mSysUIR.bool("config_enableVolumePanelTint"));
+        final ColorStateList progressTint = useActiveColoring ? null : tint;
+        row.slider.setProgressTintList(mEnableVolumePanelTint ? tint : progressTint);
     }
 
     private void updateVolumeRowSliderH(VolumeRow row, boolean enable, int vlevel) {
